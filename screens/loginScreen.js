@@ -61,9 +61,6 @@ const LoginScreen = (props) => {
         });
     }
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
     const signIn = async () => {
         await fetch('https://site.ualegion.com/swagger-ui.html', {
             method: 'POST',
