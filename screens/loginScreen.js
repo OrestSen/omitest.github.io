@@ -46,9 +46,6 @@ const LoginScreen = (props) => {
         });
     }
 
-    const handleSubmit = () => {
-        console.log(emailRef.current, passwordRef.current);
-    };
 
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
