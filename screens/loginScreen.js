@@ -5,92 +5,89 @@ import * as Animatable from 'react-native-animatable';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import Header from '../components/header'
 import TextMain from '../components/textMain'
 import Buttons from '../components/socialNetworkingBtn'
 import { loginScreenCss } from '../styles/loginScreenCss'
-import { set } from 'react-native-reanimated';
-// import simpleModal from '../components/simpleModal'
+
 
 const LoginScreen = (props) => {
 
     const [data, setData] = React.useState({
-        email: '',
-        password: '',
         loading: false,
-        check_textInputChange: false,
-        secureTextEntry: true,
-        showMe: false,
     })
+    const [secureTextEntry, setSecureTextEnrty] = useState(true)
+    const [check_textInputChange, setCheck_textInputChange] = useState(false)
 
     const textInputChange = (val) => {
-        if (val.length !== 0) {
-            setData({
-                ...data,
-                email: val,
+        if (val.length != ' ') {
+            setCheck_textInputChange({
+                ...email, val,
                 check_textInputChange: true
             });
         } else {
-            setData({
-                ...data,
-                email: val,
-                check_textInputChange: false,
+            setCheck_textInputChange({
+                ...email, val,
+                check_textInputChange: true,
             });
         }
     }
 
-    // const [showModal, setShowModal] = usetState(false)
-
-    const openModal = () => {
-        console.warn('Open modal')
-    }
-
     const updateSecureTextEntry = () => {
-        setData({
-            ...data,
-            secureTextEntry: !data.secureTextEntry
-        });
+        setSecureTextEnrty(!secureTextEntry)
     }
 
     const handlePasswordChange = (val) => {
-        setData({
-            ...data,
+        setPassword({
+            ...password,
             password: val
         });
     }
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const handleSubmit = () => {
+        console.log(emailRef.current, passwordRef.current);
+    };
+
+    const [email, setEmail] = useState();
+    const [password, setPassword] = useState();
+
+    const emailRef = React.useRef()
+    const passwordRef = React.useRef()
 
     const signIn = async () => {
-        await fetch('https://site.ualegion.com/swagger-ui.html', {
+        await fetch('https://site.ualegion.com/api/v1/security/login', {
             method: 'POST',
             headers: {
-                'Accept-Language': 'en',
-                'Authorization': 'Bearer',
-                'Content-Type': 'application/json'
+                // 'Accept-Language': 'en',
+                // 'Authorization': 'Bearer',
+                'Content-Type': 'application/json',
+
             },
             body: JSON.stringify({
-                "email": "eresid@gmail.com",
-                "password": 11111
+                "email": emailRef.current.value,
+                // emailRef.current.value,
+                "password": passwordRef.current.value,
+                // passwordRef.current.value
             })
-        }).then(
-            res => {
-                setData({
-                    loading: false
-                })
-                props.navigation.navigate('App')
-                console.warn(res);
+        })
+            .then(res => res.json())
+            .then(async (data) => {
+                console.warn(data);
+                try {
+                    await AsyncStorage.setItem('token', data.token);
+                    if (data.token != undefined) {
+                        props.navigation.navigate('App')
+                    }
+                } catch (e) {
+                    console.error(`Error in catch`);
+                }
             },
-            err => {
-                setData({
-                    loading: false
+                err => {
+                    alert('Email or password is wrong');
+                    return err.json();
                 })
-                alert('Email or password is wrong')
-            }
-        )
     }
 
     return (
@@ -111,14 +108,19 @@ const LoginScreen = (props) => {
                             size={20}
                         />
                         <TextInput
+                            nativeID="emailID"
                             name="email"
                             style={loginScreenCss.textInput}
                             placeholder='Поштова скринька'
                             autoCapitalize="none"
                             onChangeText={(val) => textInputChange(val)}
-                            value={data.email}
+                            value={props.email}
+                            ref={emailRef}
+                            type="email"
+
                         />
-                        {data.check_textInputChange ?
+
+                        {check_textInputChange ?
                             <Animatable.View
                                 animation="bounceIn"
                             >
@@ -138,17 +140,20 @@ const LoginScreen = (props) => {
                             size={20}
                         />
                         <TextInput
+                            nativeID="password"
                             name="password"
                             style={loginScreenCss.textInput}
                             placeholder='Пароль'
                             autoCapitalize="none"
-                            secureTextEntry={data.secureTextEntry ? true : false}
+                            secureTextEntry={secureTextEntry ? true : false}
                             onChangeText={(val) => handlePasswordChange(val)}
-                            value={data.password}
+                            value={props.password}
+                            ref={passwordRef}
+                            type="password"
                         />
                         <TouchableOpacity
                             onPress={updateSecureTextEntry}>
-                            {data.secureTextEntry ?
+                            {secureTextEntry ?
                                 <Feather
                                     name="eye-off"
                                     color="grey"
@@ -166,14 +171,12 @@ const LoginScreen = (props) => {
                     <TouchableOpacity >
                         <Text
                             style={loginScreenCss.forgotPass}
-
                         >Забули пароль?</Text>
-
                     </TouchableOpacity>
                     <TouchableOpacity
                         activeOpacity={0.8}
                         style={loginScreenCss.signBtn}
-                        onPress={signIn}
+                        onPress={() => signIn()}
                         disabled={data.loading}
                     >
                         <Text style={loginScreenCss.signText}>{data.loading ? "Зачекайте..." : "Увійти"}</Text>
@@ -185,4 +188,3 @@ const LoginScreen = (props) => {
 }
 
 export default LoginScreen
-
